@@ -1,20 +1,11 @@
-/*
-Copyright (C) 2011 David Eder, InterTECH
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+/**
+ *
+ * Copyright (c) 2011-2015 David Eder, InterTECH
+ * Copyright (c) 2015 Simbiose
+ *
+ * License: https://www.gnu.org/licenses/lgpl-2.1.html LGPL version 2.1
+ *
+ */
 
 #ifdef USE_NCIPHER
   #include "simplebignum.h"
@@ -568,28 +559,32 @@ static int lcrypt_bigint_create (lua_State *L) {
 }
 
 static const struct luaL_Reg lcrypt_bigint_flib[] = {
-  {"__index",    lcrypt_bigint_index},
-  {"__add",      lcrypt_bigint_add},
-  {"__sub",      lcrypt_bigint_sub},
-  {"__mul",      lcrypt_bigint_mul},
-  {"__div",      lcrypt_bigint_div},
-  {"__mod",      lcrypt_bigint_mod},
-  {"__unm",      lcrypt_bigint_unm},
-  {"__eq",       lcrypt_bigint_eq},
-  {"__lt",       lcrypt_bigint_lt},
-  {"__le",       lcrypt_bigint_le},
-  {"__tostring", lcrypt_bigint_tostring},
-  {"__len",      lcrypt_bigint_length},
-  {"__gc",       lcrypt_bigint_gc},
+  {"__index",    &lcrypt_bigint_index},
+  {"__add",      &lcrypt_bigint_add},
+  {"__sub",      &lcrypt_bigint_sub},
+  {"__mul",      &lcrypt_bigint_mul},
+  {"__div",      &lcrypt_bigint_div},
+  {"__mod",      &lcrypt_bigint_mod},
+  {"__unm",      &lcrypt_bigint_unm},
+  {"__eq",       &lcrypt_bigint_eq},
+  {"__lt",       &lcrypt_bigint_lt},
+  {"__le",       &lcrypt_bigint_le},
+  {"__tostring", &lcrypt_bigint_tostring},
+  {"__len",      &lcrypt_bigint_length},
+  {"__gc",       &lcrypt_bigint_gc},
   {NULL,         NULL}
 };
 
 static void lcrypt_start_math (lua_State *L) {
-  (void)luaL_newmetatable(L, "LCRYPT_BIGINT");  (void)luaL_register(L, NULL, lcrypt_bigint_flib);  lua_pop(L, 1);
+  (void)luaL_newmetatable(L, "LCRYPT_BIGINT");
+  (void)luaL_register(L, NULL, lcrypt_bigint_flib);
+  lua_pop(L, 1);
 
   #ifndef USE_NCIPHER
     ltc_mp = ltm_desc;
   #endif
 
-  lua_pushstring(L, "bigint"); lua_pushcfunction(L, lcrypt_bigint_create); lua_settable(L, -3);
+  lua_pushstring(L, "bigint");
+  lua_pushcfunction(L, lcrypt_bigint_create);
+  lua_settable(L, -3);
 }

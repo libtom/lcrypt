@@ -1,20 +1,11 @@
-/*
-Copyright (C) 2011 David Eder, InterTECH
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
+/**
+ *
+ * Copyright (c) 2011-2015 David Eder, InterTECH
+ * Copyright (c) 2015 Simbiose
+ *
+ * License: https://www.gnu.org/licenses/lgpl-2.1.html LGPL version 2.1
+ *
+ */
 
 #define HASH_MODE_NONE  0
 #define HASH_MODE_HASH  1
@@ -222,9 +213,9 @@ static int lcrypt_hash_index (lua_State *L) {
 }
 
 static const struct luaL_Reg lcrypt_hash_flib[] = {
-  {"__index", lcrypt_hash_index},
-  {"__gc",    lcrypt_hash_gc},
-  {"__len",   lcrypt_hash_size},
+  {"__index", &lcrypt_hash_index},
+  {"__gc",    &lcrypt_hash_gc},
+  {"__len",   &lcrypt_hash_size},
   {NULL,      NULL}
 };
 
@@ -259,5 +250,7 @@ static void lcrypt_start_hashes(lua_State *L) {
   #undef ADD_MODE
   lua_settable(L, -3);
 
-  (void)luaL_newmetatable(L, "LCRYPT_HASH");  (void)luaL_register(L, NULL, lcrypt_hash_flib);  lua_pop(L, 1);
+  (void)luaL_newmetatable(L, "LCRYPT_HASH");
+  (void)luaL_register(L, NULL, lcrypt_hash_flib);
+  lua_pop(L, 1);
 }

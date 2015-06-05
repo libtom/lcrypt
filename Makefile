@@ -1,10 +1,10 @@
-ifndef TOMCRYPT
-  TOMCRYPT = /usr/include/tomcrypt/
-endif
+WHICH=\which
+RM=\rm
+LUA_INC=/usr/include
 
-ifndef TOMMATH
-  TOMMATH = /usr/include/tommath/
-endif
+#/usr/include
+#/usr/local/include
+#/
 
 ifndef LUA
   LUA = /usr/include/
@@ -15,26 +15,28 @@ ifndef TARGET
 endif
 
 CFLAGS += -include stddef.h -O3 -g -Wall -fPIC -DLITTLE_ENDIAN -DLTM_DESC -DLTC_SOURCE -DUSE_LTM
-CFLAGS += -I$(TOMCRYPT) -I$(TOMCRYPT)/src/headers -I$(TOMMATH) -I$(LUA) -I$(LUA)/src -D_FILE_OFFSET_BITS=64
-LDFLAGS += -L$(TARGET)/lib -lm -lz -lutil -ltomcrypt -ltommath
+CFLAGS += -I/usr/local/include -I/usr/include -I$(LUA)src -D_FILE_OFFSET_BITS=64
+LDFLAGS += -L/usr/local/lib -L/usr/lib -L/usr/lib/x86_64-linux-gnu -lm -lz -lutil -ltomcrypt -ltommath
 
-
-CLEAN = lcrypt.o
-ifneq ($(wildcard *.c),)
-  CLEAN += lcrypt.so
-endif
+.PHONY: all release clean
 
 all: lcrypt.so
 
-ifneq ($(wildcard *.c),)
+release: compress clean_obj
+
+compress: lcrypt.so
+	$(if $(shell $(WHICH) ls), ls -lh $<)
+	$(if $(shell $(WHICH) strip), strip $<)
+	$(if $(shell $(WHICH) upx), upx --best $<)
 
 lcrypt.so: lcrypt.o
-	$(CC) $(CFLAGS) -shared $(LDFLAGS) lcrypt.o -o $@
+	$(CC) -o $@ $^ $(CFLAGS) -shared $(LDFLAGS)
 
 lcrypt.o: lcrypt.c lcrypt_ciphers.c lcrypt_hashes.c lcrypt_math.c lcrypt_bits.c
-	$(CC) $(CFLAGS) -c lcrypt.c -o $@
+	$(CC) -c lcrypt.c -o $@ $(CFLAGS)
 
-endif
+clean_obj:
+	$(RM) -f lcrypt.o
 
-clean:
-	rm -f $(CLEAN)
+clean: clean_obj
+	$(RM) -f lcrypt.so

@@ -1,22 +1,13 @@
-/*
-Copyright (C) 2011 David Eder, InterTECH
+/**
+ *
+ * Copyright (c) 2011-2015 David Eder, InterTECH
+ * Copyright (c) 2015 Simbiose
+ *
+ * License: https://www.gnu.org/licenses/lgpl-2.1.html LGPL version 2.1
+ *
+ */
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-*/
-
-#define LCRYPT_VERSION  "0.3.1.0"
+#define LCRYPT_VERSION  "0.4.0.0"
 
 #include <unistd.h>
 #include <stdio.h>
@@ -31,6 +22,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
+
+#if LUA_VERSION_NUM > 501
+#define luaL_register(L,n,l)  (luaL_newlib(L,l))
+#endif
 
 /* ugly wchar fix for incompatibility between tomcrypt and some wchar implementations */
 #define wchar_t hidden_wchar_t
@@ -452,8 +447,7 @@ static int lcrypt_spawn_write (lua_State *L) {
   size_t in_length = 0;
   const char* in = luaL_checklstring(L, 2, &in_length);
   if (lsp->fd < 0) RETURN_STRING_ERROR(L, "Closed");
-  (void)write(lsp->fd, in, in_length);
-  if (errno != 0) RETURN_LIBC_ERROR(L);
+  if (-1 == write(lsp->fd, in, in_length) || errno != 0) RETURN_LIBC_ERROR(L);
   return 0;
 }
 
@@ -474,35 +468,34 @@ static int lcrypt_spawn_index (lua_State *L) {
 }
 
 static const luaL_Reg lcrypt_spawn_flib[] = {
-  {"__gc",  lcrypt_spawn_close},
+  {"__gc",  &lcrypt_spawn_close},
   {NULL,    NULL}
 };
 
 #endif
 
 static const luaL_Reg lcryptlib[] = {
-  {"tohex",         lcrypt_tohex},           /* data = lcrypt.tohex(data, spacer, prepend           */
-  {"fromhex",       lcrypt_fromhex},         /* data = lcrypt.fromhex(data)                         */
-  {"compress",      lcrypt_compress},        /* data = lcrypt.compress(data)                        */
-  {"uncompress",    lcrypt_uncompress},      /* data = lcrypt.uncompress(data)                      */
-  {"base64_encode", lcrypt_base64_encode},   /* data = lcrypt.base64_encode(data)                   */
-  {"base64_decode", lcrypt_base64_decode},   /* data = lcrypt.base64_decode(data)                   */
-  {"xor",           lcrypt_xor},             /* data = lcrypt.xor(data_a, data_b)                   */
-  {"sleep",         lcrypt_sleep},           /* lcrypt.sleep(seconds)                               */
-  {"time",          lcrypt_time},            /* now = lcrypt.time()                                 */
-  {"random",        lcrypt_random},          /* data = lcrypt.random(length)                        */
-  {"tcsetattr",     lcrypt_tcsetattr},       /* lcrypt.tcsetattr(file, iflag, oflag, cflag, lflag)  */
-  {"flag_add",      lcrypt_flag_add},        /* flags = lcrypt.flag_add(flags, flag)                */
-  {"flag_remove",   lcrypt_flag_remove},     /* flags = lcrypt.flag_remove(flags, flag)             */
+  {"tohex",         &lcrypt_tohex},         /* data = lcrypt.tohex(data, spacer, prepend           */
+  {"fromhex",       &lcrypt_fromhex},       /* data = lcrypt.fromhex(data)                         */
+  {"compress",      &lcrypt_compress},      /* data = lcrypt.compress(data)                        */
+  {"uncompress",    &lcrypt_uncompress},    /* data = lcrypt.uncompress(data)                      */
+  {"base64_encode", &lcrypt_base64_encode}, /* data = lcrypt.base64_encode(data)                   */
+  {"base64_decode", &lcrypt_base64_decode}, /* data = lcrypt.base64_decode(data)                   */
+  {"xor",           &lcrypt_xor},           /* data = lcrypt.xor(data_a, data_b)                   */
+  {"sleep",         &lcrypt_sleep},         /* lcrypt.sleep(seconds)                               */
+  {"time",          &lcrypt_time},          /* now = lcrypt.time()                                 */
+  {"random",        &lcrypt_random},        /* data = lcrypt.random(length)                        */
+  {"tcsetattr",     &lcrypt_tcsetattr},     /* lcrypt.tcsetattr(file, iflag, oflag, cflag, lflag)  */
+  {"flag_add",      &lcrypt_flag_add},      /* flags = lcrypt.flag_add(flags, flag)                */
+  {"flag_remove",   &lcrypt_flag_remove},   /* flags = lcrypt.flag_remove(flags, flag)             */
   #ifndef USE_NCIPHER
-    {"spawn",         lcrypt_spawn},         /* spawn_handle = lcrypt.spawn(command)                */
+    {"spawn",         &lcrypt_spawn},       /* spawn_handle = lcrypt.spawn(command)                */
   #endif
   {NULL,             NULL}
 };
 
 int luaopen_lcrypt(lua_State *L);
 int luaopen_lcrypt(lua_State *L) {
-  luaL_register(L, "lcrypt", lcryptlib);
 
   #ifndef USE_NCIPHER
     (void)luaL_newmetatable(L, "LSPAWN");
@@ -511,8 +504,6 @@ int luaopen_lcrypt(lua_State *L) {
     lua_rawset(L, -3);
     luaL_register(L, NULL, lcrypt_spawn_flib);
   #endif
-
-  lua_getglobal(L, "lcrypt");
 
   lcrypt_start_ciphers(L);
   lcrypt_start_hashes(L);
@@ -574,7 +565,7 @@ int luaopen_lcrypt(lua_State *L) {
   lua_settable(L, -3);
 
   lua_pushstring(L, "version"); lua_pushstring(L, LCRYPT_VERSION); lua_settable(L, -3);
+  luaL_register(L, NULL, lcryptlib);
 
-  lua_pop(L, 1);
   return 1;
 }

@@ -1,42 +1,41 @@
 WHICH=\which
 RM=\rm
-LUA_INC=/usr/include
+CP=\cp
 
-#/usr/include
-#/usr/local/include
-#/
+LUACPATH ?= /usr/lib/lua/5.1
+INCDIR   ?= -I/usr/include/lua5.1
+LIBDIR   ?= -L/usr/lib
 
-ifndef LUA
-  LUA = /usr/include/
-endif
-
-ifndef TARGET
-  TARGET = .
-endif
+CMOD = lcrypt.so
+OBJS = lcrypt.o
 
 CFLAGS += -include stddef.h -O3 -g -Wall -fPIC -DLITTLE_ENDIAN -DLTM_DESC -DLTC_SOURCE -DUSE_LTM
-CFLAGS += -I/usr/local/include -I/usr/include -I$(LUA)src -D_FILE_OFFSET_BITS=64
-LDFLAGS += -L/usr/local/lib -L/usr/lib -L/usr/lib/x86_64-linux-gnu -lm -lz -lutil -ltomcrypt -ltommath
+CFLAGS += -I/usr/local/include -I/usr/include -I$(INCDIR) -D_FILE_OFFSET_BITS=64
+LDFLAGS += -L/usr/local/lib -L/usr/lib -L/usr/lib/x86_64-linux-gnu -L$(LIBDIR) -lm -lz -lutil -ltomcrypt -ltommath
 
 .PHONY: all release clean
 
-all: lcrypt.so
+all: $(CMOD)
 
-release: compress clean_obj
-
-compress: lcrypt.so
+install: $(CMOD)
 	$(if $(shell $(WHICH) ls), ls -lh $<)
 	$(if $(shell $(WHICH) strip), strip $<)
 	$(if $(shell $(WHICH) upx), upx --best $<)
+	$(CP) $(CMOD) $(LUACPATH)
 
-lcrypt.so: lcrypt.o
+uninstall:
+	$(RM) $(LUACPATH)/$(CMOD)
+
+release: compress clean_obj
+
+lcrypt.so: $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS) -shared $(LDFLAGS)
 
 lcrypt.o: lcrypt.c lcrypt_ciphers.c lcrypt_hashes.c lcrypt_math.c lcrypt_bits.c
 	$(CC) -c lcrypt.c -o $@ $(CFLAGS)
 
 clean_obj:
-	$(RM) -f lcrypt.o
+	$(RM) -f $(OBJS)
 
 clean: clean_obj
-	$(RM) -f lcrypt.so
+	$(RM) -f $(CMOD)

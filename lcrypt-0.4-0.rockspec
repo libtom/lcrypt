@@ -11,9 +11,8 @@ Symmetric ciphers, hashes, microtime, random strings, big integers, and zlib com
 }
 
 source = {
-  url = "git@github.com:simbiose/lcrypt.git",
-  dir = "lcrypt",
-  tag = "v0.4"
+  url    = "git://github.com/simbiose/lcrypt.git",
+  branch = "v0.4"
 }
 
 dependencies = {"lua >= 5.1, < 5.3"}

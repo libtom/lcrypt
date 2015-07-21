@@ -1,3 +1,4 @@
 2011-01-06 0.3.0.3 CHANGELOG started.
 2011-01-06 0.3.0.3 hash and cipher interfaces rewritten.
 2011-01-07 0.3.1.0 Added # operator to hash type.
+2015-07-21 0.4.0.0 Added crc32, does not register global variable, rockspec and LGPL version 2.1 license

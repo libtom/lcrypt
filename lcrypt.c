@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <stddef.h>
 #include <errno.h>
 #include <termios.h>
 #include <sys/types.h>
@@ -220,6 +221,13 @@ static int lcrypt_base64_decode (lua_State *L) {
 
   lua_pushlstring(L, (char*)out, (size_t)outlen);
   free(out);
+  return 1;
+}
+
+static int lcrypt_crc32 (lua_State *L) {
+  size_t inlen = 0;
+  const unsigned char *in  = (const unsigned char*)luaL_checklstring(L, 1, &inlen);
+  lua_pushnumber(L, crc32(0L, in, inlen) & 0xffffffff);
   return 1;
 }
 
@@ -475,12 +483,13 @@ static const luaL_Reg lcrypt_spawn_flib[] = {
 #endif
 
 static const luaL_Reg lcryptlib[] = {
-  {"tohex",         &lcrypt_tohex},         /* data = lcrypt.tohex(data, spacer, prepend           */
+  {"tohex",         &lcrypt_tohex},         /* data = lcrypt.tohex(data, spacer, prepend)          */
   {"fromhex",       &lcrypt_fromhex},       /* data = lcrypt.fromhex(data)                         */
   {"compress",      &lcrypt_compress},      /* data = lcrypt.compress(data)                        */
   {"uncompress",    &lcrypt_uncompress},    /* data = lcrypt.uncompress(data)                      */
   {"base64_encode", &lcrypt_base64_encode}, /* data = lcrypt.base64_encode(data)                   */
   {"base64_decode", &lcrypt_base64_decode}, /* data = lcrypt.base64_decode(data)                   */
+  {"crc32",         &lcrypt_crc32},         /* data = lcrypt.crc32(data)                           */
   {"xor",           &lcrypt_xor},           /* data = lcrypt.xor(data_a, data_b)                   */
   {"sleep",         &lcrypt_sleep},         /* lcrypt.sleep(seconds)                               */
   {"time",          &lcrypt_time},          /* now = lcrypt.time()                                 */

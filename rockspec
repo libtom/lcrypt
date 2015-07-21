@@ -23,7 +23,7 @@ external_dependencies = {
     unix = {
       LIBTOMCRYPT = {header="tomcrypt.h", library="tomcrypt"},
       LIBTOMMATH  = {header="tommath.h",  library="tommath"},
-      Z           = {header="z.h",        library="z"}
+      Z           = {header="zlib.h",     library="z"}
     }
   }
 }
@@ -31,12 +31,12 @@ external_dependencies = {
 build = {
   type = "builtin",
   modules = {
-    ["lcrypt"] = {
-      sources   = {
-        "lcrypt.c", "lcrypt_bits.c", "lcrypt_ciphers.c", "lcrypt_ciphers.h",
-        "lcrypt_hashes.c", "lcrypt_math.c"
-      },
-      libraries = {"z", "tommath", "tomcrypt"},
+    lcrypt = {
+      sources   = {"lcrypt.c"},
+      defines   = {"_FILE_OFFSET_BITS=64", "USE_LTM", "LTC_SOURCE", "LTM_DESC", "LITTLE_ENDIAN"},
+      libraries = {"z", "tommath", "tomcrypt", "util", "m"},
+      incdirs   = {"$(LIBTOMCRYPT_INCDIR)", "$(LIBTOMMATH_INCDIR)"},
+      libdirs   = {"$(LIBTOMCRYPT_LIBDIR)", "$(LIBTOMMATH_LIBDIR)"}
     }
   }
 }

@@ -62,20 +62,27 @@ static int lcrypt_key (lua_State *L) {
     (void)lua_setmetatable(L, -2);
     k->key_size = klen;
 
-    #define IV_CHECK(name) if(iv_length != cipher_descriptor[cipher].block_length) RETURN_STRING_ERROR(L, "IV wrong length");;
+    #define IV_CHECK(name)                                                          \
+      if (iv_length != cipher_descriptor[cipher].block_length)                      \
+        RETURN_STRING_ERROR(L, "IV wrong length");                                  \
 
     switch (mode) {
-      case LCRYPT_MODE_ECB: (void)lcrypt_check(L, ecb_start(cipher, key, key_length, 0, &k->data.ecb)); break;
+      case LCRYPT_MODE_ECB:
+        (void) lcrypt_check(L, ecb_start(cipher, key, key_length, 0, &k->data.ecb)); break;
       case LCRYPT_MODE_CBC: {
         IV_CHECK(cbc);
-        (void)lcrypt_check(L, cbc_start(cipher, iv, key, key_length, 0, &k->data.cbc));
+        (void) lcrypt_check(L, cbc_start(cipher, iv, key, key_length, 0, &k->data.cbc));
       } break;
       case LCRYPT_MODE_CTR: {
         IV_CHECK(ctr);
         if (strcmp((char*)extra, "le") == 0)
-          (void)lcrypt_check(L, ctr_start(cipher, iv, key, key_length, 0, CTR_COUNTER_LITTLE_ENDIAN, &k->data.ctr));
+          (void) lcrypt_check(
+            L, ctr_start(cipher, iv, key, key_length, 0, CTR_COUNTER_LITTLE_ENDIAN, &k->data.ctr)
+          );
         else if (strcmp((char*)extra, "be") == 0)
-          (void)lcrypt_check(L, ctr_start(cipher, iv, key, key_length, 0, CTR_COUNTER_BIG_ENDIAN,    &k->data.ctr));
+          (void) lcrypt_check(
+            L, ctr_start(cipher, iv, key, key_length, 0, CTR_COUNTER_BIG_ENDIAN,    &k->data.ctr)
+          );
         else {
           RETURN_STRING_ERROR(L, "Unknown endian");
         }
@@ -95,7 +102,9 @@ static int lcrypt_key (lua_State *L) {
       } break;
       case LCRYPT_MODE_F8: {
         IV_CHECK(f8);
-        (void)lcrypt_check(L, f8_start(cipher, iv, key, key_length, extra, extra_length, 0, &k->data.f8));
+        (void) lcrypt_check(
+          L, f8_start(cipher, iv, key, key_length, extra, extra_length, 0, &k->data.f8)
+        );
       } break;
     }
     k->mode = mode;
@@ -110,16 +119,14 @@ static int lcrypt_key_encrypt (lua_State *L) {
   size_t in_length  = 0;
   const unsigned char *in = (const unsigned char *)luaL_checklstring(L, 2, &in_length);
   #define STD_CHECK(name)                                                               \
-    if(in_length % cipher_descriptor[key->data.name.cipher].block_length != 0)         \
-    {                                                                                   \
+    if (in_length % cipher_descriptor[key->data.name.cipher].block_length != 0) {       \
       RETURN_STRING_ERROR(L, "Data length must be a multiple of block size");           \
     }
   #define STD_ENCRYPT(name)                                                             \
   {                                                                                     \
     unsigned char *out = lcrypt_malloc(L, in_length);                                   \
     int err = name ## _encrypt(in, out, in_length, &key->data.name);                    \
-    if(err != CRYPT_OK)                                                                \
-    {                                                                                   \
+    if (err != CRYPT_OK) {                                                              \
       free(out);                                                                        \
       RETURN_CRYPT_ERROR(L, err);                                                       \
     }                                                                                   \
@@ -147,16 +154,14 @@ static int lcrypt_key_decrypt (lua_State *L) {
   size_t in_length  = 0;
   const unsigned char *in = (const unsigned char *)luaL_checklstring(L, 2, &in_length);
   #define STD_CHECK(name)                                                               \
-    if(in_length % cipher_descriptor[key->data.name.cipher].block_length != 0)         \
-    {                                                                                   \
+    if (in_length % cipher_descriptor[key->data.name.cipher].block_length != 0) {       \
       RETURN_STRING_ERROR(L, "Data length must be a multiple of block size");           \
     }
   #define STD_DECRYPT(name)                                                             \
   {                                                                                     \
     unsigned char *out = lcrypt_malloc(L, in_length);                                   \
     int err = name ## _decrypt(in, out, in_length, &key->data.name);                    \
-    if(err != CRYPT_OK)                                                                \
-    {                                                                                   \
+    if (err != CRYPT_OK) {                                                              \
       free(out);                                                                        \
       RETURN_CRYPT_ERROR(L, err);                                                       \
     }                                                                                   \
@@ -187,21 +192,29 @@ static int lcrypt_key_index (lua_State *L) {
   if (strcmp(index, "decrypt") == 0)  { lua_pushcfunction(L, lcrypt_key_decrypt);       return 1; }
   if (strcmp(index, "key_size") == 0) { lua_pushinteger(L, (lua_Integer)key->key_size); return 1; }
 
-  #define STD_INDEX(_name)                                                                                                                       \
-    if (strcmp(index, "mode") == 0) { lua_pushstring(L, #_name); return 1; }                                                                      \
-    if (strcmp(index, "block_size") == 0) { lua_pushinteger(L, (lua_Integer)cipher_descriptor[key->data._name.cipher].block_length); return 1; }  \
-    if (strcmp(index, "cipher") == 0) { lua_pushstring(L, cipher_descriptor[key->data._name.cipher].name); return 1; }
+  #define STD_INDEX(_name)                                                                         \
+    if (strcmp(index, "mode") == 0) {                                                              \
+      lua_pushstring(L, #_name);                                                                   \
+      return 1;                                                                                    \
+    }                                                                                              \
+    if (strcmp(index, "block_size") == 0) {                                                        \
+      lua_pushinteger(L, (lua_Integer)cipher_descriptor[key->data._name.cipher].block_length);     \
+      return 1;                                                                                    \
+    }                                                                                              \
+    if (strcmp(index, "cipher") == 0) {                                                            \
+      lua_pushstring(L, cipher_descriptor[key->data._name.cipher].name);                           \
+      return 1;                                                                                    \
+    }                                                                                              \
 
-  #define IV_INDEX(name)                                                                             \
-    if(strcmp(index, "iv") == 0)                                                                     \
-    {                                                                                                \
-      unsigned char iv[MAXBLOCKSIZE];                                                                \
-      unsigned long length = MAXBLOCKSIZE;                                                           \
-      memset(iv, 0, sizeof(iv));                                                                     \
-      (void)lcrypt_check(L, name ## _getiv(iv, &length, &key->data.name));                                 \
-      lua_pushlstring(L, (char*)iv, (size_t)length);                                                 \
-      return 1;                                                                                      \
-    }                                                                                                \
+  #define IV_INDEX(name)                                                                           \
+    if(strcmp(index, "iv") == 0) {                                                                 \
+      unsigned char iv[MAXBLOCKSIZE];                                                              \
+      unsigned long length = MAXBLOCKSIZE;                                                         \
+      memset(iv, 0, sizeof(iv));                                                                   \
+      (void)lcrypt_check(L, name ## _getiv(iv, &length, &key->data.name));                         \
+      lua_pushlstring(L, (char*)iv, (size_t)length);                                               \
+      return 1;                                                                                    \
+    }                                                                                              \
 
   switch (key->mode) {
     case LCRYPT_MODE_ECB: STD_INDEX(ecb);                break;
@@ -226,12 +239,18 @@ static int lcrypt_key_newindex (lua_State *L) {
 
   if (strcmp(index, "iv") == 0) {
     switch (key->mode) {
-      case LCRYPT_MODE_CBC: (void)lcrypt_check(L, cbc_setiv(v, (unsigned long)v_length, &key->data.cbc)); break;
-      case LCRYPT_MODE_CTR: (void)lcrypt_check(L, ctr_setiv(v, (unsigned long)v_length, &key->data.ctr)); break;
-      case LCRYPT_MODE_CFB: (void)lcrypt_check(L, cfb_setiv(v, (unsigned long)v_length, &key->data.cfb)); break;
-      case LCRYPT_MODE_OFB: (void)lcrypt_check(L, ofb_setiv(v, (unsigned long)v_length, &key->data.ofb)); break;
-      case LCRYPT_MODE_LRW: (void)lcrypt_check(L, lrw_setiv(v, (unsigned long)v_length, &key->data.lrw)); break;
-      case LCRYPT_MODE_F8:  (void)lcrypt_check(L, f8_setiv(v,  (unsigned long)v_length, &key->data.f8));  break;
+      case LCRYPT_MODE_CBC:
+        (void) lcrypt_check(L, cbc_setiv(v, (unsigned long)v_length, &key->data.cbc)); break;
+      case LCRYPT_MODE_CTR:
+        (void) lcrypt_check(L, ctr_setiv(v, (unsigned long)v_length, &key->data.ctr)); break;
+      case LCRYPT_MODE_CFB:
+        (void) lcrypt_check(L, cfb_setiv(v, (unsigned long)v_length, &key->data.cfb)); break;
+      case LCRYPT_MODE_OFB:
+        (void) lcrypt_check(L, ofb_setiv(v, (unsigned long)v_length, &key->data.ofb)); break;
+      case LCRYPT_MODE_LRW:
+        (void) lcrypt_check(L, lrw_setiv(v, (unsigned long)v_length, &key->data.lrw)); break;
+      case LCRYPT_MODE_F8:
+        (void) lcrypt_check(L, f8_setiv(v,  (unsigned long)v_length, &key->data.f8));  break;
     }
   }
 

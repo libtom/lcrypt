@@ -10,8 +10,8 @@ CMOD = lcrypt.so
 OBJS = lcrypt.o
 
 CFLAGS += -include stddef.h -O3 -g -Wall -fPIC -DLITTLE_ENDIAN -DLTM_DESC -DLTC_SOURCE -DUSE_LTM
-CFLAGS += -I/usr/local/include -I/usr/include -I$(INCDIR) -D_FILE_OFFSET_BITS=64
-LDFLAGS += -L/usr/local/lib -L/usr/lib -L/usr/lib/x86_64-linux-gnu -L$(LIBDIR) -lm -lz -lutil -ltomcrypt -ltommath
+CFLAGS += -I/usr/local/include -I/usr/include $(INCDIR) -D_FILE_OFFSET_BITS=64
+LDFLAGS += -L/usr/local/lib -L/usr/lib -L/usr/lib/x86_64-linux-gnu $(LIBDIR) -lm -lz -lutil -ltomcrypt -ltommath
 
 .PHONY: all release clean
 

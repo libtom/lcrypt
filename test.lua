@@ -1,10 +1,11 @@
 local lcrypt = require('lcrypt')
 
-key = lcrypt.key('aes', 'ecb', '0123456789abcdef')
+local key, out, check
 
-
-out = key:encrypt('0123456789abcdef0123456789abcdef')
-
+key   = lcrypt.key('aes', 'ecb', '0123456789abcdef')
+out   = key:encrypt('0123456789abcdef0123456789abcdef')
 check = key:decrypt(out)
 
 print(out, check)
+
+print( lcrypt.tohex( lcrypt.hash('md5', 'hash', 'bla bla'):done() ) )

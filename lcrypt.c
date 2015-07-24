@@ -94,13 +94,13 @@ static int lcrypt_tohex (lua_State *L) {
 
   {
     char *result = lcrypt_malloc(L, prepend_length + in_length * 2 + (in_length - 1) * spacer_length);
-    for(j = 0; j < (int)prepend_length; ++j) result[pos++] = prepend[j];
-    result[++pos] = digits[((int)*in >> 4) & 0x0f];
-    result[++pos] = digits[(int)*in++ & 0x0f];
+    for (j = 0; j < (int)prepend_length; ++j) result[pos++] = prepend[j];
+    result[pos++] = digits[((int)*in >> 4) & 0x0f];
+    result[pos++] = digits[(int)*in++ & 0x0f];
     for (i = 1; i < (int)in_length; i++) {
-      for (j = 0; j < (int)spacer_length; ++j) result[++pos] = spacer[j];
-      result[++pos] = digits[((int)*in >> 4) & 0x0f];
-      result[++pos] = digits[(int)*in++ & 0x0f];
+      for (j = 0; j < (int)spacer_length; ++j) result[pos++] = spacer[j];
+      result[pos++] = digits[((int)*in >> 4) & 0x0f];
+      result[pos++] = digits[(int)*in++ & 0x0f];
     }
     lua_pushlstring(L, result, (size_t)pos);
     free(result);
@@ -116,7 +116,7 @@ static int lcrypt_fromhex (lua_State *L) {
   int i, d = -1, e = -1, pos = 0;
   memset(result, 0, (size_t)(in_length / 2 + 1));
 
-  for (i = 0; i < (int)in_length; i++) {
+  for (i = 0; i < (int)in_length; ++i) {
     if (d == -1) {
       if (*in >= '0' && *in <= '9')
         d = (int)(*in - '0');
